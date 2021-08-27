@@ -1,0 +1,15 @@
+{
+  "title": "Brave New World",
+  "author": "Aldous Huxley",
+  "pages": 326,
+  "price": 25,
+  "quantity": 1,
+  "seller": "dodel"
+}
+{
+  "username": "dodel",
+  "email": "dodel@dodel.com",
+  "phone": "012345",
+  "wishList": [],
+  "books": []
+}
