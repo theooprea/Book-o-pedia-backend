@@ -17,6 +17,7 @@ userCredentialsRouter.route('/')
 
 userCredentialsRouter.route('/register')
 .post((req, res) => {
+    console.log('POST /register')
     const inputUserCredentials = {}
     const inputUserData = {}
 
@@ -27,7 +28,6 @@ userCredentialsRouter.route('/register')
     }
 
     userCredentials.findOne({ email: req.body.email }).then((user) => {
-        console.log('Register ' + user)
         if (!user) {
             inputUserCredentials.email = req.body.email
             inputUserCredentials.password = req.body.password
@@ -67,6 +67,7 @@ userCredentialsRouter.route('/register')
 
 userCredentialsRouter.route('/login')
 .post((req, res) => {
+    console.log('POST /login')
     if (!(req.body.email && req.body.password)) {
         res.statusCode = 400
         res.send('All input is required')
@@ -75,7 +76,12 @@ userCredentialsRouter.route('/login')
 
     userCredentials.findOne({ email: req.body.email }).then((user) => {
         if (user.password === req.body.password) {
-            const token = jwt.sign({email:user.email}, options.secretKey, {expiresIn: 3600})
+            const token = jwt.sign(
+                {email:user.email},
+                options.secretKey,
+                {expiresIn: 3600}
+            )
+
             const responseMessage = {}
             responseMessage.user = user
             responseMessage.token = token
@@ -94,6 +100,5 @@ userCredentialsRouter.route('/login')
         res.send(error)
     })
 })
-// TODO: add logout route
 
 module.exports = userCredentialsRouter

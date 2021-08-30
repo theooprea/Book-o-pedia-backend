@@ -6,6 +6,7 @@ const booksRouter = require('./routes/books')
 const userDataRouter = require('./routes/userDataRouter')
 const userCredentialsRouter = require('./routes/auth')
 
+const authenticate = require('./middleware/authenticate')
 const mongoose = require('mongoose')
 const connect = mongoose.connect('mongodb://localhost:27017/bookOLX')
 

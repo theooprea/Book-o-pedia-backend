@@ -1,13 +1,15 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const authenticate = require('../middleware/authenticate')
 
 const userData = require('../models/userData')
+const userCredentials = require('../models/userCredentials')
 
 const userDataRouter = express.Router()
 userDataRouter.use(bodyParser.json())
 
 userDataRouter.route('/')
-.get((req, res) => {
+.get(authenticate, (req, res) => {
     userData.find({}).then((users) => {
         console.log('GET /userData')
         res.statusCode = 200
@@ -19,7 +21,7 @@ userDataRouter.route('/')
         res.send(err)
     })
 })
-.post((req, res) => {
+.post(authenticate, (req, res) => {
     userData.create(req.body).then((user) => {
         console.log('POST /userData ' + req.body.username + " " + req.body.email + " " + req.body.phone)
         res.statusCode = 201
@@ -31,11 +33,11 @@ userDataRouter.route('/')
         res.send(err)
     })
 })
-.put((req, res) => {
+.put(authenticate, (req, res) => {
     res.statusCode = 403;
     res.send('PUT operation not supported on /users');
 })
-.delete((req, res) => {
+.delete(authenticate, (req, res) => {
     userData.remove({}).then((users) => {
         console.log('DELETE /userData')
         res.statusCode = 200
@@ -50,7 +52,7 @@ userDataRouter.route('/')
 
 // TODO: fix put to update all wishLists everywhere
 userDataRouter.route('/:username')
-.get((req, res) => {
+.get(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('GET /userData/' + req.params.username)
         if (user != null) {
@@ -68,12 +70,12 @@ userDataRouter.route('/:username')
         res.send(err)
     })
 })
-.post((req, res) => {
+.post(authenticate, (req, res) => {
     res.statusCode = 403;
     res.send('POST operation not supported on /users/' + req.params.username);
 })
 // TODO: fix put to update all wishLists everywhere
-.put((req, res) => {
+.put(authenticate, (req, res) => {
     userData.findOne( { username: req.params.username }).then((user) => {
         console.log('PUT /userData/' + req.params.username + ' ' +
             req.body.username + " " + req.body.email + " " + req.body.phone)
@@ -102,21 +104,38 @@ userDataRouter.route('/:username')
         res.send(err)
     })
 })
-.delete((req, res) => {
-    userData.remove({ username: req.params.username }).then((resp) => {
-        console.log('DELETE /userData/' + req.params.username)
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
-        res.json(resp)
-    }, (err) => {
-        console.log('DELETE /userData/' + req.params.username + ' error ' + err)
-        res.statusCode = 500
-        res.send(err)
-    })
+.delete(authenticate, (req, res) => {
+    if (req.username === req.params.username) {
+        var response = {}
+        userData.remove({ username: req.params.username }).then((resp) => {
+            console.log('DELETE /userData/' + req.params.username)
+            userCredentials.remove({ email: req.email }).then((resp2) => {
+                response.deleteData = resp
+                response.deleteCredentials = resp2
+
+                res.statusCode = 200
+                res.setHeader('Content-Type', 'application/json')
+                res.json(response)
+            }, (err) => {
+                console.log('DELETE /userData/' + req.params.username + ' error ' + err)
+                res.statusCode = 500
+                res.send(err)
+            })
+        }, (err) => {
+            console.log('DELETE /userData/' + req.params.username + ' error ' + err)
+            res.statusCode = 500
+            res.send(err)
+        })
+    }
+    else {
+        res.statusCode = 403
+        res.send('Not allowed to delete other user')
+    }
+    
 })
 
 userDataRouter.route('/:username/wishList')
-.get((req, res) => {
+.get(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('GET /userData/' + req.params.username + '/wishList')
         if (user != null) {
@@ -134,7 +153,7 @@ userDataRouter.route('/:username/wishList')
         res.send(err)
     })
 })
-.post((req, res) => {
+.post(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('POST /userData/' + req.params.username + '/wishList')
         if (user != null) {
@@ -168,11 +187,11 @@ userDataRouter.route('/:username/wishList')
         res.send(err)
     })
 })
-.put((req, res) => {
+.put(authenticate, (req, res) => {
     res.statusCode = 403;
     res.send('PUT operation not supported on /users/' + req.params.username + '/wishList');
 })
-.delete((req, res) => {
+.delete(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('DELETE /userData/' + req.params.username + 'wishList')
         if (user != null) {
@@ -198,7 +217,7 @@ userDataRouter.route('/:username/wishList')
 })
 
 userDataRouter.route('/:username/books')
-.get((req, res) => {
+.get(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('GET /userData/' + req.params.username + '/books')
         if (user != null) {
@@ -216,7 +235,7 @@ userDataRouter.route('/:username/books')
         res.send(err)
     })
 })
-.post((req, res) => {
+.post(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('POST /userData/' + req.params.username + '/books')
         if (user != null) {
@@ -250,11 +269,11 @@ userDataRouter.route('/:username/books')
         res.send(err)
     })
 })
-.put((req, res) => {
+.put(authenticate, (req, res) => {
     res.statusCode = 403;
     res.send('PUT operation not supported on /users/' + req.params.username + "/books");
 })
-.delete((req, res) => {
+.delete(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('DELETE /userData/' + req.params.username + '/books')
         if (user != null) {
@@ -280,7 +299,7 @@ userDataRouter.route('/:username/books')
 })
 
 userDataRouter.route('/:username/wishList/:book')
-.get((req, res) => {
+.get(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('GET /userData/' + req.params.username + '/wishList/' + req.params.book)
         if (user != null) {
@@ -308,15 +327,15 @@ userDataRouter.route('/:username/wishList/:book')
         res.send(err)
     })
 })
-.post((req, res) => {
+.post(authenticate, (req, res) => {
     res.statusCode = 403;
     res.send('POST operation not supported on /users/' + req.params.username + '/wishList/' + req.params.book);
 })
-.put((req, res) => {
+.put(authenticate, (req, res) => {
     res.statusCode = 403;
     res.send('PUT operation not supported on /users/' + req.params.username + '/wishList/' + req.params.book);
 })
-.delete((req, res) => {
+.delete(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('DELETE /userData/' + req.params.username + '/wishList/' + req.params.book)
         if (user != null) {
@@ -344,7 +363,7 @@ userDataRouter.route('/:username/wishList/:book')
 })
 
 userDataRouter.route('/:username/books/:book')
-.get((req, res) => {
+.get(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('GET /userData/' + req.params.username + '/books/' + req.params.book)
         if (user != null) {
@@ -372,12 +391,12 @@ userDataRouter.route('/:username/books/:book')
         res.send(err)
     })
 })
-.post((req, res) => {
+.post(authenticate, (req, res) => {
     res.statusCode = 403;
     res.send('POST operation not supported on /users/' + req.params.username + "/books/" + req.params.book);
 })
 .put()
-.delete((req, res) => {
+.delete(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('DELETE /userData/' + req.params.username + '/wishList/' + req.params.book)
         if (user != null) {
