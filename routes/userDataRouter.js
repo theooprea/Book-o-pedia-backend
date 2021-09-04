@@ -81,21 +81,66 @@ userDataRouter.route('/:username')
             req.body.username + " " + req.body.email + " " + req.body.phone)
 
         if (user != null) {
-            user.username = req.body.username
-            user.email = req.body.email
-            user.phone = req.body.phone
+            if (user.username != req.body.username) {
+                console.log('Username changed')
 
-            user.save().then((user) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(user);
-            }, (err) => {
-                res.statusCode = 500
-                res.send(err)
-            })
+                userData.find({}).then((users) => {
+                    try {
+                        users.forEach((userIterator) => {
+                            var wishList = userIterator.wishList
+    
+                            wishList.forEach((wishListBook) => {
+                                if (wishListBook.seller === user.username) {
+                                    wishListBook.seller = req.body.username
+                                }
+                            })
+                        
+                            userIterator.wishList = wishList
+                            userIterator.save()
+                        })
+                        user.username = req.body.username
+                        user.email = req.body.email
+                        user.phone = req.body.phone
+
+                        var books = user.books
+
+                        books.forEach((book) => {
+                            book.seller = user.username
+                        })
+
+                        user.books = books
+                        user.save()
+
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(user);
+                    }
+                    catch (err) {
+                        res.statusCode = 500
+                        res.send(err)
+                    }
+                }, (err) => {
+                    res.statusCode = 500
+                    res.send(err)
+                })
+            }
+            else {
+                user.username = req.body.username
+                user.email = req.body.email
+                user.phone = req.body.phone
+    
+                user.save().then((user) => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(user);
+                }, (err) => {
+                    res.statusCode = 500
+                    res.send(err)
+                })
+            }
         }
         else {
-            res.statusCode
+            res.statusCode = 404
             res.send('No ' + req.params.username + ' user found')
         }
     }, (err) => {
@@ -395,7 +440,86 @@ userDataRouter.route('/:username/books/:book')
     res.statusCode = 403;
     res.send('POST operation not supported on /users/' + req.params.username + "/books/" + req.params.book);
 })
-.put()
+// TODO PUT to modify everything
+.put(authenticate, (req, res) => {
+    userData.findOne({ username: req.params.username }).then((user) => {
+        if (user != null) {
+            var filtered = user.books.filter(bookIterator => {
+                return bookIterator.title === req.params.book
+            })
+
+            if (filtered.length != 1) {
+                res.statusCode = 500
+                res.send('Book not unique')
+            }
+            else {
+                var book = filtered[0]
+                book.title = req.body.title
+                book.author = req.body.author
+                book.genre = req.body.genre
+                book.pages = req.body.pages
+                book.price = req.body.price
+                book.quantity = req.body.quantity
+
+
+                userData.find({}).then((users) => {
+                    try {
+                        users.forEach((userIterator) => {
+                            var wishList = userIterator.wishList
+
+                            wishList.forEach((bookIterator) => {
+                                if (bookIterator.title === req.params.book) {
+                                    bookIterator.title = req.body.title
+                                    bookIterator.author = req.body.author
+                                    bookIterator.genre = req.body.genre
+                                    bookIterator.pages = req.body.pages
+                                    bookIterator.price = req.body.price
+                                    bookIterator.quantity = req.body.quantity
+                                }
+                            })
+
+                            userIterator.wishList = wishList
+                            userIterator.save()
+                        })
+
+                        var books = user.books
+
+                        books.forEach((bookIterator) => {
+                            bookIterator.title = req.body.title
+                            bookIterator.author = req.body.author
+                            bookIterator.genre = req.body.genre
+                            bookIterator.pages = req.body.pages
+                            bookIterator.price = req.body.price
+                            bookIterator.quantity = req.body.quantity
+                        })
+
+                        user.books = books
+                        user.save()
+
+                        res.statusCode = 200
+                        res.setHeader('Content-Type', 'application/json')
+                        res.json(book)
+                    }
+                    catch (err) {
+                        res.statusCode = 500
+                        res.send(err)
+                    }
+                }, (err) => {
+                    res.statusCode = 500
+                    res.send(err)
+                })
+            }
+        }
+        else {
+            res.statusCode = 404
+            res.send('User ' + req.params.username + ' not found')
+        }
+    }, (err) => {
+        console.log('PUT /userData/' + req.params.username + '/wishList/' + req.params.book + ' error ' + err)
+        res.statusCode = 500
+        res.send(err)
+    })
+})
 .delete(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('DELETE /userData/' + req.params.username + '/wishList/' + req.params.book)

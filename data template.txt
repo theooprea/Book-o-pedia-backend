@@ -13,3 +13,21 @@
   "wishList": [],
   "books": []
 }
+{
+  "email": "dodel@dodel.com",
+  "password": "dodelinio",
+  "username": "dodel",
+  "phone": "012345"
+}
+{
+  "email": "copilu@inazuma.com",
+  "password": "inazuma",
+  "username": "copilu",
+  "phone": "012345"
+}
+{
+  "email": "test@test.com",
+  "password": "test",
+  "username": "test",
+  "phone": "012345"
+}
