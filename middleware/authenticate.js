@@ -5,7 +5,7 @@ const userData = require('../models/userData')
 const verifyToken = async (req, res, next) => {
     var token = req.headers['authorization']
 
-    if (token.includes('bearer') || token.includes('Bearer') || token.includes('BEARER')) {
+    if (token && (token.includes('bearer') || token.includes('Bearer') || token.includes('BEARER'))) {
         token = token.split(' ')[1]
     }
 

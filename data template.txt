@@ -2,6 +2,7 @@
   "title": "Brave New World",
   "author": "Aldous Huxley",
   "pages": 326,
+  "genre": "dystopia",
   "price": 25,
   "quantity": 1,
   "seller": "dodel"

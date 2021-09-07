@@ -75,24 +75,36 @@ userCredentialsRouter.route('/login')
     }
 
     userCredentials.findOne({ email: req.body.email }).then((user) => {
-        if (user.password === req.body.password) {
-            const token = jwt.sign(
-                {email:user.email},
-                options.secretKey,
-                {expiresIn: 3600}
-            )
-
-            const responseMessage = {}
-            responseMessage.user = user
-            responseMessage.token = token
-
-            res.statusCode = 200
-            res.setHeader('Content-Type', 'application/json')
-            res.json(responseMessage)
+        if (user) {
+            if (user.password === req.body.password) {
+                const token = jwt.sign(
+                    {email:user.email},
+                    options.secretKey,
+                    {expiresIn: 3600}
+                )
+    
+                userData.findOne( { email: req.body.email }).then((userdata) => {
+                    const responseMessage = {}
+                    responseMessage.username = userdata.username
+                    responseMessage.email = user.email
+                    responseMessage.token = token
+        
+                    res.statusCode = 200
+                    res.setHeader('Content-Type', 'application/json')
+                    res.json(responseMessage)
+                }, (err) => {
+                    res.statusCode = 500
+                    res.send(err)
+                })
+            }
+            else {
+                res.statusCode = 400
+                res.send('Invalid credentials')
+            }
         }
         else {
-            res.statusCode = 400
-            res.send('Invalid credentials')
+            res.statusCode = 404
+            res.send('User not found')
         }
     }, (err) => {
         console.log('Login error ' + err)

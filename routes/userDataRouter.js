@@ -78,7 +78,7 @@ userDataRouter.route('/:username')
 .put(authenticate, (req, res) => {
     userData.findOne( { username: req.params.username }).then((user) => {
         console.log('PUT /userData/' + req.params.username + ' ' +
-            req.body.username + " " + req.body.email + " " + req.body.phone)
+            req.body.email + " " + req.body.phone)
 
         if (user != null) {
             if (user.username != req.body.username) {
@@ -98,22 +98,32 @@ userDataRouter.route('/:username')
                             userIterator.wishList = wishList
                             userIterator.save()
                         })
-                        user.username = req.body.username
-                        user.email = req.body.email
-                        user.phone = req.body.phone
 
-                        var books = user.books
+                        userCredentials.findOne({ email: user.email }).then((userCredential) => {
+                            console.log("intra aici")
+                            user.username = req.body.username
+                            user.email = req.body.email
+                            user.phone = req.body.phone
 
-                        books.forEach((book) => {
-                            book.seller = user.username
+                            var books = user.books
+
+                            books.forEach((book) => {
+                                book.seller = user.username
+                            })
+
+                            user.books = books
+                            user.save()
+
+                            userCredential.email = req.body.email
+                            userCredential.save()
+
+                            res.statusCode = 200
+                            res.setHeader('Content-Type', 'application/json')
+                            res.json(user)
+                        }, (err) => {
+                            res.statusCode = 500
+                            res.send(err)
                         })
-
-                        user.books = books
-                        user.save()
-
-                        res.statusCode = 200;
-                        res.setHeader('Content-Type', 'application/json');
-                        res.json(user);
                     }
                     catch (err) {
                         res.statusCode = 500
@@ -125,14 +135,22 @@ userDataRouter.route('/:username')
                 })
             }
             else {
-                user.username = req.body.username
-                user.email = req.body.email
-                user.phone = req.body.phone
-    
-                user.save().then((user) => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json(user);
+                userCredentials.findOne({ email: user.email }).then((userCredentials) => {
+                    user.username = req.body.username
+                    user.email = req.body.email
+                    user.phone = req.body.phone
+        
+                    userCredentials.email = req.body.email
+                    userCredentials.save()
+
+                    user.save().then((user) => {
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(user);
+                    }, (err) => {
+                        res.statusCode = 500
+                        res.send(err)
+                    })
                 }, (err) => {
                     res.statusCode = 500
                     res.send(err)
@@ -515,22 +533,42 @@ userDataRouter.route('/:username/books/:book')
             res.send('User ' + req.params.username + ' not found')
         }
     }, (err) => {
-        console.log('PUT /userData/' + req.params.username + '/wishList/' + req.params.book + ' error ' + err)
+        console.log('PUT /userData/' + req.params.username + '/books/' + req.params.book + ' error ' + err)
         res.statusCode = 500
         res.send(err)
     })
 })
+// TODO fix delete
 .delete(authenticate, (req, res) => {
     userData.findOne({ username: req.params.username }).then((user) => {
-        console.log('DELETE /userData/' + req.params.username + '/wishList/' + req.params.book)
+        console.log('DELETE /userData/' + req.params.username + '/books/' + req.params.book)
         if (user != null) {
-            user.wishList = user.wishList.filter(bookIterator => {
+            user.books = user.books.filter(bookIterator => {
                 return bookIterator.title != req.params.book
             })
             user.save().then((resp) => {
-                res.statusCode = 200
-                res.setHeader('Content-Type', 'application/json')
-                res.json(resp)
+                userData.find({}).then((users) => {
+                    try {
+                        users.forEach((userIterator) => {
+                            userIterator.wishList = userIterator.wishList.filter(bookIterator => {
+                                return bookIterator.title != req.params.book
+                            })
+
+                            userIterator.save()
+                        })
+
+                        res.statusCode = 200
+                        res.setHeader('Content-Type', 'application/json')
+                        res.json(resp)
+                    }
+                    catch (err) {
+                        res.statusCode = 500
+                        res.send(err)
+                    }
+                }, (err) => {
+                    res.statusCode = 500
+                    res.send(err)
+                })
             }, (err) => {
                 res.statusCode = 500
                 res.send(err)

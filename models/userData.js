@@ -8,15 +8,15 @@ var bookSchema = new Schema({
     },
     author: {
         type: String,
-        required: false
+        required: true
     },
     genre: {
         type: String,
-        required: false
+        required: true
     },
     pages: {
         type: Number,
-        required: false,
+        required: true,
         min: 0
     },
     price: {
