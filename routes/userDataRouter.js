@@ -302,11 +302,17 @@ userDataRouter.route('/:username/books')
     userData.findOne({ username: req.params.username }).then((user) => {
         console.log('POST /userData/' + req.params.username + '/books')
         if (user != null) {
-            var filtered = user.wishList.filter(bookIterator => {
+            var filtered = user.books.filter(bookIterator => {
                 return bookIterator.title === req.body.title
             })
 
             if (filtered.length == 0) {
+                if (!(req.body.title && req.body.author && req.body.genre && req.body.pages && req.body.price && req.body.quantity)) {
+                    res.statusCode = 400
+                    res.send('All input is required')
+                    return
+                }
+
                 user.books.push(req.body)
                 user.save().then((user) => {
                     res.statusCode = 200
@@ -503,12 +509,14 @@ userDataRouter.route('/:username/books/:book')
                         var books = user.books
 
                         books.forEach((bookIterator) => {
-                            bookIterator.title = req.body.title
-                            bookIterator.author = req.body.author
-                            bookIterator.genre = req.body.genre
-                            bookIterator.pages = req.body.pages
-                            bookIterator.price = req.body.price
-                            bookIterator.quantity = req.body.quantity
+                            if (bookIterator.title === req.params.book) {
+                                bookIterator.title = req.body.title
+                                bookIterator.author = req.body.author
+                                bookIterator.genre = req.body.genre
+                                bookIterator.pages = req.body.pages
+                                bookIterator.price = req.body.price
+                                bookIterator.quantity = req.body.quantity
+                            }
                         })
 
                         user.books = books
@@ -551,7 +559,7 @@ userDataRouter.route('/:username/books/:book')
                     try {
                         users.forEach((userIterator) => {
                             userIterator.wishList = userIterator.wishList.filter(bookIterator => {
-                                return bookIterator.title != req.params.book
+                                return (bookIterator.title != req.params.book || bookIterator.seller === req.params.username) 
                             })
 
                             userIterator.save()

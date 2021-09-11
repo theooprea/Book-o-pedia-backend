@@ -8,6 +8,15 @@
   "seller": "dodel"
 }
 {
+  "title": "1984",
+  "author": "HG Wells",
+  "pages": 326,
+  "genre": "dystopia",
+  "price": 25,
+  "quantity": 1,
+  "seller": "dodel"
+}
+{
   "username": "dodel",
   "email": "dodel@dodel.com",
   "phone": "012345",
@@ -30,5 +39,11 @@
   "email": "test@test.com",
   "password": "test",
   "username": "test",
+  "phone": "012345"
+}
+{
+  "email": "da",
+  "password": "da",
+  "username": "da",
   "phone": "012345"
 }
