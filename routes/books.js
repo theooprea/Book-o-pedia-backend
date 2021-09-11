@@ -1,52 +1,36 @@
-let Books = [
-    {
-        "id": 1,
-        "title": 'salut',
-        "author": 'scuze'
-    }, 
-    {
-        "id": 2,
-        "title": 'aaaaaa salut',
-        "author": 'aaaaaaaa scuze'
-    }
-]
-
 const express = require('express')
 const bodyParser = require('body-parser')
+const authenticate = require('../middleware/authenticate')
+
+const userData = require('../models/userData')
+const userCredentials = require('../models/userCredentials')
+
 const booksRouter = express.Router()
 booksRouter.use(bodyParser.json())
 
 booksRouter.route('/')
-.get((req, res) => {
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'application/json')
-    res.json(Books)
-})
-.post((req, res) => {
-    const reqBook = req.body
-    let index = Books.length
-    console.log(index)
-    const newBook = {
-        "id": index + 1,
-        "title": reqBook.title,
-        "author": reqBook.author
-    }
+.get(authenticate, (req, res) => {
+    userData.find({}).then((users) => {
+        console.log('GET /books')
+        
+        var booksResponse = []
 
-    Books.push(newBook)
+        users.forEach((userIterator) => {
+            var userBooks = userIterator.books
 
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
-    res.json(Books);
-})
-.delete((req, res) => {
-    Books = []
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
-    res.json(Books);
-})
+            userBooks.forEach((bookIterator) => {
+                booksResponse.push(bookIterator)
+            })
+        })
 
-booksRouter.route('/:id')
-.get()
-.delete()
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(booksResponse)
+    }, (err) => {
+        console.log('GET /books error ' + err)
+        res.statusCode = 500
+        res.send(err)
+    })
+})
 
 module.exports = booksRouter
