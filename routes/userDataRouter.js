@@ -221,7 +221,10 @@ userDataRouter.route('/:username/wishList')
         console.log('POST /userData/' + req.params.username + '/wishList')
         if (user != null) {
             var filtered = user.wishList.filter(bookIterator => {
-                return bookIterator.title === req.body.title
+                return bookIterator.title === req.body.title && bookIterator.author === req.body.author
+                && bookIterator.genre === req.body.genre && bookIterator.price === req.body.price &&
+                bookIterator.pages === req.body.pages && bookIterator.quantity === req.body.quantity
+                && bookIterator.seller === req.body.seller
             })
 
             if (filtered.length == 0) {
